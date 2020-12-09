@@ -1,5 +1,5 @@
 ## Project 4: myfind
-Talib Pierson
+Talib Pierson  
 December 2020
 
 https://shapeshed.com/unix-find/
