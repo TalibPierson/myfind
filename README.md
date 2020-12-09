@@ -1,10 +1,13 @@
 ## Project 4: find
 # Simplifind
+Talib Pierson
+December 2020
 
-For this last project you will implement a simplified version of the UNIX command find. Before we proceed, take a few moments to familiarize yourself with the command:
+https://shapeshed.com/unix-find/
+https://en.cppreference.com/w/cpp/filesystem
 
-    Read the man page by typing man find (on Linux; MacOS find may be different). Don't skip this step. In particular, skim all the different search options like -gid or -iname.
-    Look at the examples in this tutorial. By the time you're done, your version of find should be able to run many of these examples!
+1. Read the man page by typing `man find` (on Linux; MacOS find may be different). Don't skip this step. In particular, skim all the different search options like -gid or -iname.
+1. Look at the examples in this tutorial. By the time you're done, your version of find should be able to run many of these examples!
 
 Your goal is to write a C or C++ program called myfind that efficiently scans a directory tree in a file system, searching for files that meet given criteria, and doing something with them (by default, just printing their names).
 
