@@ -1,26 +1,19 @@
-## Project 4: find
-# Simplifind
+## Project 4: myfind
 Talib Pierson
 December 2020
 
 https://shapeshed.com/unix-find/
 https://en.cppreference.com/w/cpp/filesystem
 
-1. Read the man page by typing `man find` (on Linux; MacOS find may be different). Don't skip this step. In particular, skim all the different search options like -gid or -iname.
-1. Look at the examples in this tutorial. By the time you're done, your version of find should be able to run many of these examples!
+Support the following command line options:
 
-Your goal is to write a C or C++ program called myfind that efficiently scans a directory tree in a file system, searching for files that meet given criteria, and doing something with them (by default, just printing their names).
+*`-name` pattern (including wildcards)  
+*`-mtime` n (to simplify, I will only test with n=0, so don't bother with negatives or plus sign).  
+*`-type` t  
+*`-exec` command (only the ; variant).  
+*`-print`  
+*`-L` (follow symbolic links)  
 
-In particular, you need to support the following command line options
-
-    -name pattern (including wildcards)
-    -mtime n (to simplify, I will only test with n=0, so don't bother with negatives or plus sign).
-    -type t
-    -exec command (only the ; variant).
-    -print
-    -L (follow symbolic links)
-
-You do not need to implement any options that are in the man page but not on this list.
 ## Notes and hints:
 
     Your output should be 100% identical to that of find on Linux for the supported options, including error messages and edge cases. I will use a testing script to verify this.
