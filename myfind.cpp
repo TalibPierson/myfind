@@ -108,6 +108,15 @@ void parse_args(int argc, char *argv[]) {
     cout << "links: " << links << '\n';
 }
 
+void run(string &path) {
+
+}
+
 int main(int argc, char *argv[]) {
+    // first parse the arguments
     parse_args(argc, argv);
+    // then run find on every path in paths
+    for (auto &path : paths) {
+        run(path);
+    }
 }
