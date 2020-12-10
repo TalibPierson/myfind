@@ -178,7 +178,7 @@ bool test(const filesystem::path &p) {
 }
 
 void run(fs::path &path) {
-    cout << path.string() << '\n';
+    if (test(path)) cout << path.string() << '\n';
     for (auto &item : fs::recursive_directory_iterator(
             path,                           // iterate over path
             fs::directory_options(links)))  // follow symbolic links iff links
