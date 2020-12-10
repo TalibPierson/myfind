@@ -20,6 +20,13 @@ namespace fs = filesystem;
 namespace po = boost::program_options;
 
 std::string prog;
+vector<string> paths;
+bool name = false; string arg_name;
+bool mtime = false; ssize_t arg_mtime = 0;
+bool type = false; char arg_type = '\0';
+bool exec = false; vector<string> arg_exec;
+bool print = false;
+bool links = false;
 
 /// provide operator<< for ostream, vector<std::string>
 template<typename T>
@@ -45,13 +52,6 @@ void arg_err(const string &msg, const string &what) {
 int main(int argc, char *argv[]) {
     // declare arguments
     prog = argv[0];
-    vector<string> paths;
-    bool name = false; string arg_name;
-    bool mtime = false; ssize_t arg_mtime = 0;
-    bool type = false; char arg_type = '\0';
-    bool exec = false; vector<string> arg_exec;
-    bool print = false;
-    bool links = false;
 
     // parse arguments
     for (int i = 1; i < argc; ++i) {
