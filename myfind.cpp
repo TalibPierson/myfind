@@ -13,6 +13,7 @@ using namespace std;
 namespace fs = filesystem;
 namespace po = boost::program_options;
 
+// init args
 std::string prog;
 vector<string> paths;
 bool name = false; string arg_name;
@@ -41,10 +42,8 @@ void arg_err(const string &msg, const string &what) {
 }
 
 int main(int argc, char *argv[]) {
-    // declare arguments
-    prog = argv[0];
-
     // parse arguments
+    prog = argv[0];
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg[0] == '-') {
@@ -90,8 +89,8 @@ int main(int argc, char *argv[]) {
             paths.emplace_back(arg);
         }
     }
-    if (!(print || exec)) print = true;  // default action is print
     if (paths.empty()) paths = {"."};  // default path is .
+    if (!(print || exec)) print = true;  // default action is print
 
     // debug print
     cout << "prog: " << prog << '\n';
