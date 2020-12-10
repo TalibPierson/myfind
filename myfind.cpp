@@ -4,16 +4,10 @@
  * December 2020
  * A simplified version of the UNIX command find.
  */
-#include <dirent.h>
 
 #include <boost/program_options.hpp>
 #include <filesystem>
 #include <iostream>
-#include <sstream>
-#include <cctype>
-#include <cstdio>
-#include <cstdlib>
-#include <unistd.h>
 
 using namespace std;
 namespace fs = filesystem;
@@ -30,18 +24,15 @@ bool links = false;
 
 /// provide operator<< for ostream, vector<std::string>
 template<typename T>
-ostream& operator<<(ostream &out, const vector<T> &paths) {
+ostream& operator<<(ostream &out, const vector<T> &vec) {
     out << '[';
-    if (!paths.empty()) {
-        for (auto &path : paths) out << path << ", ";
+    if (!vec.empty()) {
+        for (auto &path : vec) out << path << ", ";
         out << "\b\b";
     }
     out << ']';
     return out;
 }
-
-/// List subdirectories recursively
-void ls_dir_r(const char *name) { DIR *dir_stream = opendir(name); }
 
 /// report a failure
 void arg_err(const string &msg, const string &what) {
@@ -59,27 +50,27 @@ int main(int argc, char *argv[]) {
         if (arg[0] == '-') {
             switch (arg[1]) {
                 case 'n': // -name
-                    if (i + 1 < argc) {
-                        name = true; arg_name = argv[i + 1];
+                    if (++i < argc) {
+                        name = true; arg_name = argv[i];
                     }
                     else arg_err("missing argument to", "-name");
                     break;
                 case 'm': // -mtime
-                    if (i + 1 < argc){
-                        mtime = true; arg_mtime = stol(argv[i + 1]);
+                    if (++i < argc){
+                        mtime = true; arg_mtime = stol(argv[i]);
                     }
                     else arg_err("missing argument to", "-mtime");
                     break;
                 case 't': // -type
-                    if (i + 1 < argc) {
-                        type = true; arg_type = argv[i + 1][0];
+                    if (++i < argc) {
+                        type = true; arg_type = argv[i][0];
                     }
                     else arg_err("missing argument to", "-type");
                     break;
                 case 'e': // -exec
-                    if (i + 1 < argc) {
+                    if (++i < argc) {
                         exec = true;
-                        for (i = i + 1; i < argc && argv[i][0] != ';'; ++i) {
+                        for (; i < argc && argv[i][0] != ';'; ++i) {
                             arg_exec.emplace_back(argv[i]);
                         }
                     }
