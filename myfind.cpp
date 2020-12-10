@@ -90,8 +90,9 @@ int main(int argc, char *argv[]) {
             paths.emplace_back(arg);
         }
     }
-    if (!(print || exec)) print = true;
+    if (!(print || exec)) print = true;  // default action is print
 
+    // debug print
     cout << "prog: " << prog << '\n';
     cout << "paths: " << paths << '\n';
     cout << "name: " << name << ' ' << arg_name << '\n';
