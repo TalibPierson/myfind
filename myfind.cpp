@@ -16,16 +16,20 @@ namespace po = boost::program_options;
 // init args
 std::string prog;
 vector<string> paths;
-bool name = false; string arg_name;
-bool mtime = false; ssize_t arg_mtime = 0;
-bool type = false; char arg_type = '\0';
-bool exec = false; vector<string> arg_exec;
+bool name = false;
+string arg_name;
+bool mtime = false;
+ssize_t arg_mtime = 0;
+bool type = false;
+char arg_type = '\0';
+bool exec = false;
+vector<string> arg_exec;
 bool print = false;
 bool links = false;
 
 /// provide operator<< for ostream, vector
 template<typename T>
-ostream& operator<<(ostream &out, const vector<T> &vec) {
+ostream &operator<<(ostream &out, const vector<T> &vec) {
     out << '[';
     if (!vec.empty()) {
         for (auto &path : vec) out << path << ", ";
@@ -50,26 +54,25 @@ void parse_args(int argc, char *argv[]) {
             switch (arg[1]) {
                 case 'n': // -name
                     if (++i < argc) {
-                        name = true; arg_name = argv[i];
-                    }
-                    else arg_err("missing argument to", "-name");
+                        name = true;
+                        arg_name = argv[i];
+                    } else arg_err("missing argument to", "-name");
                     break;
                 case 'm': // -mtime
                     if (++i < argc) {
                         try {
                             mtime = true;
                             arg_mtime = stol(argv[i]);
-                        } catch (const std::invalid_argument& _) {
+                        } catch (const std::invalid_argument &_) {
                             arg_err("invalid argument `" + string(argv[i]) + "' to", "-mtime");
                         }
-                    }
-                    else arg_err("missing argument to", "-mtime");
+                    } else arg_err("missing argument to", "-mtime");
                     break;
                 case 't': // -type
                     if (++i < argc) {
-                        type = true; arg_type = argv[i][0];
-                    }
-                    else arg_err("missing argument to", "-type");
+                        type = true;
+                        arg_type = argv[i][0];
+                    } else arg_err("missing argument to", "-type");
                     break;
                 case 'e': // -exec
                     if (++i < argc) {
@@ -77,8 +80,7 @@ void parse_args(int argc, char *argv[]) {
                         for (; i < argc && argv[i][0] != ';'; ++i) {
                             arg_exec.emplace_back(argv[i]);
                         }
-                    }
-                    else arg_err("missing argument to", "-exec");
+                    } else arg_err("missing argument to", "-exec");
                     break;
                 case 'p': // -print
                     print = true;
