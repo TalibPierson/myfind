@@ -91,6 +91,7 @@ int main(int argc, char *argv[]) {
         }
     }
     if (!(print || exec)) print = true;  // default action is print
+    if (paths.empty()) paths = {"."};  // default path is .
 
     // debug print
     cout << "prog: " << prog << '\n';
