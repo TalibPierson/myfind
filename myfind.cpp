@@ -52,43 +52,49 @@ void parse_args(int argc, char *argv[]) {
         string arg = argv[i];
         if (arg[0] == '-') {
             switch (arg[1]) {
-                case 'n': // -name
+                case 'n':  // -name
                     if (++i < argc) {
                         name = true;
                         arg_name = argv[i];
-                    } else arg_err("missing argument to", "-name");
+                    } else
+                        arg_err("missing argument to", "-name");
                     break;
-                case 'm': // -mtime
+                case 'm':  // -mtime
                     if (++i < argc) {
                         try {
                             mtime = true;
                             arg_mtime = stol(argv[i]);
                         } catch (const std::invalid_argument &_) {
-                            arg_err("invalid argument `" + string(argv[i]) + "' to", "-mtime");
+                            arg_err(
+                                    "invalid argument `" + string(argv[i]) + "' to",
+                                    "-mtime");
                         }
-                    } else arg_err("missing argument to", "-mtime");
+                    } else
+                        arg_err("missing argument to", "-mtime");
                     break;
-                case 't': // -type
+                case 't':  // -type
                     if (++i < argc) {
                         type = true;
                         arg_type = argv[i][0];
-                    } else arg_err("missing argument to", "-type");
+                    } else
+                        arg_err("missing argument to", "-type");
                     break;
-                case 'e': // -exec
+                case 'e':  // -exec
                     if (++i < argc) {
                         exec = true;
                         for (; i < argc && argv[i][0] != ';'; ++i) {
                             arg_exec.emplace_back(argv[i]);
                         }
-                    } else arg_err("missing argument to", "-exec");
+                    } else
+                        arg_err("missing argument to", "-exec");
                     break;
-                case 'p': // -print
+                case 'p':  // -print
                     print = true;
                     break;
-                case 'L': // -L
+                case 'L':  // -L
                     links = true;
                     break;
-                default: // -???
+                default:  // -???
                     arg_err("unknown predicate", arg);
                     break;
             }
@@ -96,7 +102,7 @@ void parse_args(int argc, char *argv[]) {
             paths.emplace_back(arg);
         }
     }
-    if (paths.empty()) paths = {"."};  // default path is .
+    if (paths.empty()) paths = {"."};    // default path is .
     if (!(print || exec)) print = true;  // default action is print
 
     // debug print
@@ -110,9 +116,7 @@ void parse_args(int argc, char *argv[]) {
     cout << "links: " << links << '\n';
 }
 
-void run(string &path) {
-
-}
+void run(string &path) {}
 
 int main(int argc, char *argv[]) {
     // first parse the arguments
