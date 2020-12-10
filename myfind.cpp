@@ -23,7 +23,7 @@ bool exec = false; vector<string> arg_exec;
 bool print = false;
 bool links = false;
 
-/// provide operator<< for ostream, vector<std::string>
+/// provide operator<< for ostream, vector
 template<typename T>
 ostream& operator<<(ostream &out, const vector<T> &vec) {
     out << '[';
@@ -55,8 +55,13 @@ int main(int argc, char *argv[]) {
                     else arg_err("missing argument to", "-name");
                     break;
                 case 'm': // -mtime
-                    if (++i < argc){
-                        mtime = true; arg_mtime = stol(argv[i]);
+                    if (++i < argc) {
+                        try {
+                            mtime = true;
+                            arg_mtime = stol(argv[i]);
+                        } catch (const std::invalid_argument& _) {
+                            arg_err("invalid argument" + string(argv[i]) + "to", "-mtime");
+                        }
                     }
                     else arg_err("missing argument to", "-mtime");
                     break;
