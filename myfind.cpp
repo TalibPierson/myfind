@@ -24,7 +24,7 @@ vector<fs::path> paths;
 bool name = false;
 string arg_name;
 bool mtime = false;
-ssize_t arg_mtime = 0;
+time_t arg_mtime = 0;
 bool type = false;
 char arg_type = '\0';
 
@@ -155,14 +155,17 @@ bool test_type(const filesystem::path &p) {  // TODO: test this
 
 bool test_mtime(const filesystem::path &p) {  // TODO: mtime wrong
     /*
+     * POSIX:
      * The primary shall evaluate as true
      * if the file modification time subtracted from the initialization time,
-     * divided by 86400 (with any remainder discarded), is n
+     * divided by 86400 (with any remainder discarded), is n.
+     * LINUX:
+     * File was last modified less than, more than or exactly n*24 hours ago.
      */
-    return (fs::last_write_time(p).time_since_epoch().count() -
-            chrono::system_clock::now().time_since_epoch().count()) /
-           86400 ==
-           arg_mtime;
+
+    time_t mod = fs::last_write_time(p).time_since_epoch().count();
+    time_t now = chrono::file_clock::now().time_since_epoch().count();
+    return (now - mod) / 86400 == arg_mtime;
 }
 
 bool test_name(const filesystem::path &p) {  // TODO: untested, wildcard
@@ -177,18 +180,17 @@ bool test(const filesystem::path &p) {
     return ret;
 }
 
-bool execute(fs::path &path) {
+bool execute(const fs::path &path) {
     bool ret = true;
     return ret;
 }
 
-void do_actions(fs::path &path) {
+void do_actions(const fs::path &path) {
     if (exec) {  // print only what is executed and returns SUCCESS
         if (execute(path) && print) cout << path.string() << '\n';
     } else {  // plain print; default action
         cout << path.string() << '\n';
     }
-
 }
 
 void find(fs::path &path) {
@@ -199,7 +201,7 @@ void find(fs::path &path) {
             path,                           // iterate over path
             fs::directory_options(links)))  // follow symbolic links iff links
     {
-        if (test(item)) do_actions(path);
+        if (test(item)) do_actions(item.path());
     }
 }
 
