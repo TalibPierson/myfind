@@ -116,7 +116,12 @@ void parse_args(int argc, char *argv[]) {
     cout << "links: " << links << '\n';
 }
 
-void run(string &path) {}
+void run(string &path) {
+    cout << path << '\n';
+    for (auto &p : fs::recursive_directory_iterator(path)) {
+        std::cout << p.path().string() << '\n';
+    }
+}
 
 int main(int argc, char *argv[]) {
     // first parse the arguments
