@@ -23,8 +23,6 @@ bool exec = false; vector<string> arg_exec;
 bool print = false;
 bool links = false;
 
-void parse_args(int argc, char **pString);
-
 /// provide operator<< for ostream, vector
 template<typename T>
 ostream& operator<<(ostream &out, const vector<T> &vec) {
@@ -44,7 +42,7 @@ void arg_err(const string &msg, const string &what) {
 }
 
 /// parse arguments
-void parse_args(int argc, const char *argv[]) {
+void parse_args(int argc, char *argv[]) {
     prog = argv[0];
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
