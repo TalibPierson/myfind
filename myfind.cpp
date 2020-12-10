@@ -171,9 +171,9 @@ bool test_name(const filesystem::path &p) {
 
 bool test(const filesystem::path &p) {
     bool ret = true;
-    if (name) ret = ret && test_name(p);
+    if (name) ret = test_name(p);
     if (mtime) ret = ret && test_mtime(p);
-    if (name) ret = ret && test_type(p);
+    if (type) ret = ret && test_type(p);
     return ret;
 }
 
