@@ -131,11 +131,11 @@ bool test(const filesystem::directory_entry &entry) {
 
 void run(fs::path &path) {
     cout << path << '\n';
-    if (links) {
-        for (auto &item : fs::recursive_directory_iterator(
-                path, fs::directory_options(links))) {
-            if (test(item)) std::cout << item.path().string() << '\n';
-        }
+    for (auto &item : fs::recursive_directory_iterator(
+            path,  // iterate over path
+            fs::directory_options(links)))  // follow symbolic links iff links
+    {
+        if (test(item)) std::cout << item.path().string() << '\n';
     }
 }
 
