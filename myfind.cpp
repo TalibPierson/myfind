@@ -19,92 +19,94 @@ using namespace std;
 namespace fs = filesystem;
 namespace po = boost::program_options;
 
+std::string prog;
+
 /// provide operator<< for ostream, vector<std::string>
 template<typename T>
 ostream& operator<<(ostream &out, const vector<T> &paths) {
-    if (paths.empty()) {
-        out << '[';
+    out << '[';
+    if (!paths.empty()) {
         for (auto &path : paths) out << path << ", ";
-        out << "\b\b]";
+        out << "\b\b";
     }
+    out << ']';
     return out;
-}
-
-/// report a failure
-void fail(const string &what) {
-    perror(what.c_str());
-    exit(EXIT_FAILURE);
-}
-
-/// open a directory stream
-DIR *xopendir(const string &dirname) {
-    DIR *dp = opendir(dirname.c_str());
-    if (dp == nullptr) fail("opendir");
-    return dp;
 }
 
 /// List subdirectories recursively
 void ls_dir_r(const char *name) { DIR *dir_stream = opendir(name); }
 
-pair<string, string> exec_parser(const string& s)
-{
-    if (s.find("-exec") == 0) {
-        return pair<string, string>("exec", s.substr(0, s.find(';')));
-    }
-    return pair<string, string>();
+/// report a failure
+void arg_err(const string &msg, const string &what) {
+    cerr << prog << ": " << msg << " `" << what << "'\n";
+    exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[]) {
-    // Declare the supported desc.
-    po::positional_options_description pos;
-    pos.add("path", -1);
-    boost::program_options::options_description desc("desc");
-    desc.add_options()(
-            "help", "Print the usage of myfind and exit.")(
-            "version", "Print the myfind version number and exit.")(
-            "path", po::value<vector<string>>()->default_value({"."}), "Path names.")(
-            "L", "Follow symbolic links.");
-    boost::program_options::options_description tests("tests");
-    tests.add_options()(
-            "name", po::value<string>(), "Base of file name matches shell pattern arg.")(
-            "mtime", po::value<ssize_t>(), "File's data was last modified arg*24 hours ago.")(
-            "type", po::value<char>(), "File is of type arg.");
-    boost::program_options::options_description actions("actions");
-    actions.add_options()(
-            "exec", po::value<string>(), "Execute arg; true if 0 status is returned.")(
-            "print","Print the full file name on the standard output.");
-    desc.add(tests).add(actions);
+    // declare arguments
+    prog = argv[0];
+    vector<string> paths;
+    bool name = false; string arg_name;
+    bool mtime = false; ssize_t arg_mtime = 0;
+    bool type = false; char arg_type = '\0';
+    bool exec = false; vector<string> arg_exec;
+    bool print = false;
+    bool links = false;
 
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv)
-                      .options(desc)
-                      .style(po::command_line_style::unix_style |
-                             po::command_line_style::allow_long_disguise)
-                      .positional(pos)
-                      .extra_parser(exec_parser)
-                      .run(),
-              vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        cout << "Usage: myfind [-L] [path...] [expression]" << "\n\n";
-        cout << desc << '\n';
-        return EXIT_SUCCESS;
-    }
-    if (vm.count("version")) {
-        cout << "myfind (Talib Pierson) December 2020" << '\n';
-        return EXIT_SUCCESS;
-    }
-    if (vm.count("path")) {
-        cout << "path = {";
-        for (auto &s : vm["path"].as<vector<string>>()) {
-            cout << "    " << s << "\n";
+    // parse arguments
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg[0] == '-') {
+            switch (arg[1]) {
+                case 'n': // -name
+                    if (i + 1 < argc) {
+                        name = true; arg_name = argv[i + 1];
+                    }
+                    else arg_err("missing argument to", "-name");
+                    break;
+                case 'm': // -mtime
+                    if (i + 1 < argc){
+                        mtime = true; arg_mtime = stol(argv[i + 1]);
+                    }
+                    else arg_err("missing argument to", "-mtime");
+                    break;
+                case 't': // -type
+                    if (i + 1 < argc) {
+                        type = true; arg_type = argv[i + 1][0];
+                    }
+                    else arg_err("missing argument to", "-type");
+                    break;
+                case 'e': // -exec
+                    if (i + 1 < argc) {
+                        exec = true;
+                        for (i = i + 1; i < argc && argv[i][0] != ';'; ++i) {
+                            arg_exec.emplace_back(argv[i]);
+                        }
+                    }
+                    else arg_err("missing argument to", "-exec");
+                    break;
+                case 'p': // -print
+                    print = true;
+                    break;
+                case 'L': // -L
+                    links = true;
+                    break;
+                default: // -???
+                    arg_err("unknown predicate", arg);
+                    break;
+            }
+        } else {
+            paths.emplace_back(arg);
         }
-        cout << "}\n";
-        return EXIT_SUCCESS;
     }
-    if (vm.count("exec")) {
-        cout << vm["path"].as<vector<string>>() << "\n";
-        return EXIT_SUCCESS;
-    }
+    if (!(print || exec)) print = true;
+
+    cout << "prog: " << prog << '\n';
+    cout << "paths: " << paths << '\n';
+    cout << "name: " << name << ' ' << arg_name << '\n';
+    cout << "mtime: " << mtime << ' ' << arg_mtime << '\n';
+    cout << "type: " << type << ' ' << arg_type << '\n';
+    cout << "exec: " << exec << ' ' << arg_exec << '\n';
+    cout << "print: " << print << '\n';
+    cout << "links: " << links << '\n';
 }
