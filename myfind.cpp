@@ -6,6 +6,7 @@
  */
 
 #include <boost/program_options.hpp>
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 
@@ -53,9 +54,18 @@ void arg_err(const string &msg, const string &what) {
     exit(EXIT_FAILURE);
 }
 
+/// report a failure
+void run_err(const string &what, const string &msg) {
+    cerr << prog << ": ‘" << what << "’: " << msg << "\n";
+    exit(EXIT_FAILURE);
+}
+
 /// parse arguments
 void parse_args(int argc, char *argv[]) {
+    // set program name
     prog = argv[0];
+
+    // parse options
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg[0] == '-') {
@@ -84,6 +94,13 @@ void parse_args(int argc, char *argv[]) {
                     if (++i < argc) {
                         type = true;
                         arg_type = argv[i][0];
+                        if (arg_type != 'b' && arg_type != 'c' &&
+                            arg_type != 'd' && arg_type != 'p' &&
+                            arg_type != 'f' && arg_type != 'l' &&
+                            arg_type != 's')
+                            cerr << prog
+                                 << ": Unknown argument to -type: " << arg_type
+                                 << '\n';
                     } else
                         arg_err("missing argument to", "-type");
                     break;
@@ -112,27 +129,58 @@ void parse_args(int argc, char *argv[]) {
     }
     if (paths.empty()) paths = {"."};    // default path is .
     if (!(print || exec)) print = true;  // default action is print
-
-    // debug print
-    cout << "prog: " << prog << '\n';
-    cout << "paths: " << paths << '\n';
-    cout << "name: " << name << ' ' << arg_name << '\n';
-    cout << "mtime: " << mtime << ' ' << arg_mtime << '\n';
-    cout << "type: " << type << ' ' << arg_type << '\n';
-    cout << "exec: " << exec << ' ' << arg_exec << '\n';
-    cout << "print: " << print << '\n';
-    cout << "links: " << links << '\n';
 }
 
-bool test(const filesystem::directory_entry &entry) {
+bool test_type(const filesystem::path &p) {
+    switch (arg_type) {
+        case 'b':  // block (buffered) special
+            return fs::is_block_file(p);
+        case 'c':  // character (unbuffered) special
+            return fs::is_character_file(p);
+        case 'd':  // directory
+            return fs::is_directory(p);
+        case 'p':  // named pipe (FIFO)
+            return fs::is_fifo(p);
+        case 'f':  // regular file
+            return fs::is_regular_file(p);
+        case 'l':  // symbolic link
+            return fs::is_symlink(p);
+        case 's':  // socket
+            return fs::is_socket(p);
+        default:
+            perror("test_type");
+            exit(EXIT_FAILURE);
+    }
+}
+
+bool test_mtime(const filesystem::path &p) {
+    /*
+     * The primary shall evaluate as true
+     * if the file modification time subtracted from the initialization time,
+     * divided by 86400 (with any remainder discarded), is n
+     */
+    return (fs::last_write_time(p).time_since_epoch().count() -
+            chrono::system_clock::now().time_since_epoch().count()) /
+           86400 ==
+           arg_mtime;
+}
+
+bool test_name(const filesystem::path &p) {
+    return p.filename().string() == arg_name;
+}
+
+bool test(const filesystem::path &p) {
     bool ret = true;
+    if (name) ret = ret && test_name(p);
+    if (mtime) ret = ret && test_mtime(p);
+    if (name) ret = ret && test_type(p);
     return ret;
 }
 
 void run(fs::path &path) {
-    cout << path << '\n';
+    cout << path.string() << '\n';
     for (auto &item : fs::recursive_directory_iterator(
-            path,  // iterate over path
+            path,                           // iterate over path
             fs::directory_options(links)))  // follow symbolic links iff links
     {
         if (test(item)) std::cout << item.path().string() << '\n';
@@ -143,7 +191,12 @@ int main(int argc, char *argv[]) {
     // first parse the arguments
     parse_args(argc, argv);
     // then run find on every path in paths
-    for (auto &path : paths) {
-        run(path);
+    for (auto &p : paths) {
+        if (fs::exists(p)) {
+            if (links && fs::is_symlink(p)) p = fs::read_symlink(p);
+            run(p);
+        } else {
+            run_err(p.string(), "No such file or directory");
+        }
     }
 }
