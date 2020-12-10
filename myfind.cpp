@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
                             mtime = true;
                             arg_mtime = stol(argv[i]);
                         } catch (const std::invalid_argument& _) {
-                            arg_err("invalid argument" + string(argv[i]) + "to", "-mtime");
+                            arg_err("invalid argument `" + string(argv[i]) + "' to", "-mtime");
                         }
                     }
                     else arg_err("missing argument to", "-mtime");
