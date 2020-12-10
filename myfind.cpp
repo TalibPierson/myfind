@@ -131,7 +131,7 @@ void parse_args(int argc, char *argv[]) {
     if (!(print || exec)) print = true;  // default action is print
 }
 
-bool test_type(const filesystem::path &p) {
+bool test_type(const filesystem::path &p) {  // TODO: test this
     switch (arg_type) {
         case 'b':  // block (buffered) special
             return fs::is_block_file(p);
@@ -153,7 +153,7 @@ bool test_type(const filesystem::path &p) {
     }
 }
 
-bool test_mtime(const filesystem::path &p) {
+bool test_mtime(const filesystem::path &p) {  // TODO: mtime wrong
     /*
      * The primary shall evaluate as true
      * if the file modification time subtracted from the initialization time,
@@ -165,7 +165,7 @@ bool test_mtime(const filesystem::path &p) {
            arg_mtime;
 }
 
-bool test_name(const filesystem::path &p) {
+bool test_name(const filesystem::path &p) {  // TODO: untested, wildcard
     return p.filename().string() == arg_name;
 }
 
@@ -177,13 +177,29 @@ bool test(const filesystem::path &p) {
     return ret;
 }
 
-void run(fs::path &path) {
-    if (test(path)) cout << path.string() << '\n';
+bool execute(fs::path &path) {
+    bool ret = true;
+    return ret;
+}
+
+void do_actions(fs::path &path) {
+    if (exec) {  // print only what is executed and returns SUCCESS
+        if (execute(path) && print) cout << path.string() << '\n';
+    } else {  // plain print; default action
+        cout << path.string() << '\n';
+    }
+
+}
+
+void find(fs::path &path) {
+    if (test(path)) {
+        do_actions(path);
+    }
     for (auto &item : fs::recursive_directory_iterator(
             path,                           // iterate over path
             fs::directory_options(links)))  // follow symbolic links iff links
     {
-        if (test(item)) std::cout << item.path().string() << '\n';
+        if (test(item)) do_actions(path);
     }
 }
 
@@ -194,7 +210,7 @@ int main(int argc, char *argv[]) {
     for (auto &p : paths) {
         if (fs::exists(p)) {
             if (links && fs::is_symlink(p)) p = fs::read_symlink(p);
-            run(p);
+            find(p);
         } else {
             run_err(p.string(), "No such file or directory");
         }
