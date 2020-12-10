@@ -13,18 +13,26 @@ using namespace std;
 namespace fs = filesystem;
 namespace po = boost::program_options;
 
-// init args
+/* ==[ INITIALIZE GLOBAL ARGUMENTS ]== */
+/// name of program
 std::string prog;
-vector<string> paths;
+/// paths to search
+vector<fs::path> paths;
+
+// tests
 bool name = false;
 string arg_name;
 bool mtime = false;
 ssize_t arg_mtime = 0;
 bool type = false;
 char arg_type = '\0';
+
+// actions
 bool exec = false;
 vector<string> arg_exec;
 bool print = false;
+
+// short argument
 bool links = false;
 
 /// provide operator<< for ostream, vector
@@ -116,10 +124,18 @@ void parse_args(int argc, char *argv[]) {
     cout << "links: " << links << '\n';
 }
 
-void run(string &path) {
+bool test(const filesystem::directory_entry &entry) {
+    bool ret = true;
+    return ret;
+}
+
+void run(fs::path &path) {
     cout << path << '\n';
-    for (auto &p : fs::recursive_directory_iterator(path)) {
-        std::cout << p.path().string() << '\n';
+    if (links) {
+        for (auto &item : fs::recursive_directory_iterator(
+                path, fs::directory_options(links))) {
+            if (test(item)) std::cout << item.path().string() << '\n';
+        }
     }
 }
 
