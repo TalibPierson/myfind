@@ -216,6 +216,7 @@ void do_actions(const fs::path &path) {
     }
 }
 
+/// TODO: cannot increment recursive directory iterator: Permission denied
 void find(const fs::path &path) {
     if (test(path)) {
         do_actions(path);
