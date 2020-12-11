@@ -4,15 +4,18 @@
  * December 2020
  * A simplified version of the UNIX command find in C++20.
  */
+#include <unistd.h>
 
-#include <boost/program_options.hpp>
 #include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 namespace fs = filesystem;
-namespace po = boost::program_options;
 
 /* ==[ INITIALIZE GLOBAL ARGUMENTS ]== */
 /// name of program
@@ -73,8 +76,9 @@ void parse_args(int argc, char *argv[]) {
                     if (++i < argc) {
                         name = true;
                         arg_name = argv[i];
-                    } else
+                    } else {
                         arg_err("missing argument to", "-name");
+                    }
                     break;
                 case 'm':  // -mtime
                     if (++i < argc) {
@@ -86,8 +90,9 @@ void parse_args(int argc, char *argv[]) {
                                     "invalid argument `" + string(argv[i]) + "' to",
                                     "-mtime");
                         }
-                    } else
+                    } else {
                         arg_err("missing argument to", "-mtime");
+                    }
                     break;
                 case 't':  // -type
                     if (++i < argc) {
@@ -100,8 +105,9 @@ void parse_args(int argc, char *argv[]) {
                             cerr << prog
                                  << ": Unknown argument to -type: " << arg_type
                                  << '\n';
-                    } else
+                    } else {
                         arg_err("missing argument to", "-type");
+                    }
                     break;
                 case 'e':  // -exec
                     if (++i < argc) {
@@ -111,8 +117,9 @@ void parse_args(int argc, char *argv[]) {
                         }
                         if (strcmp(argv[i], ";") != 0)
                             arg_err("missing argument to", "-exec");
-                    } else
+                    } else {
                         arg_err("missing argument to", "-exec");
+                    }
                     break;
                 case 'p':  // -print
                     print = true;
@@ -191,7 +198,7 @@ int execute(const fs::path &path) {  // TODO: unimplemented
         size_t where = arg.find("{}");
         if (where != string::npos)
             arg.replace(where, arg.length(), path.string());
-        strcpy(args[i], arg.c_str());
+        snprintf(args[i], arg.length(), "%s", arg.c_str());
     }
 
     return execvpe(args[0], args, environ);
@@ -205,14 +212,14 @@ void do_actions(const fs::path &path) {
     }
 }
 
-void find(fs::path &path) {
+void find(const fs::path &path) {
     if (test(path)) {
         do_actions(path);
     }
     for (auto &item : fs::recursive_directory_iterator(
-            path,                           // iterate over path
-            fs::directory_options(links)))  // follow symbolic links iff links
-    {
+            path,  // iterate over path
+            fs::directory_options(
+                    links))) {  // follow symbolic links iff links
         if (test(item)) do_actions(item.path());
     }
 }
