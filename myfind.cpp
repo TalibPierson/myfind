@@ -188,7 +188,7 @@ bool test_mtime(const filesystem::path &p) {
     return (curr - modt) / 86400 == arg_mtime;
 }
 
-bool test_name(const filesystem::path &p) {  // TODO: wildcard
+bool test_name(const filesystem::path &p) {  // TODO: wildcard, glob()
     return p.filename().string() == arg_name;
 }
 
@@ -200,7 +200,7 @@ bool test(const filesystem::path &p) {
     return ret;
 }
 
-int execute(const fs::path &path) {  // TODO: unimplemented
+int execute(const fs::path &path) {
     // The string "{}" is replaced by the current file name being processed
     size_t len = arg_exec.size();
     char **args = new char *[len + 1];
