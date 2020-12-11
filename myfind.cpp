@@ -24,7 +24,7 @@ vector<fs::path> paths;
 bool name = false;
 string arg_name;
 bool mtime = false;
-time_t arg_mtime = 0;
+ssize_t arg_mtime = 0;
 bool type = false;
 char arg_type = '\0';
 
@@ -163,9 +163,10 @@ bool test_mtime(const filesystem::path &p) {  // TODO: mtime wrong
      * File was last modified less than, more than or exactly n*24 hours ago.
      */
 
-    time_t mod = fs::last_write_time(p).time_since_epoch().count();
-    time_t now = chrono::file_clock::now().time_since_epoch().count();
-    return (now - mod) / 86400 == arg_mtime;
+    time_t modt = chrono::system_clock::to_time_t(
+            chrono::file_clock::to_sys(fs::last_write_time(p)));
+    time_t curr = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    return (curr - modt) / 86400 == arg_mtime;
 }
 
 bool test_name(const filesystem::path &p) {  // TODO: untested, wildcard
