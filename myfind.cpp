@@ -67,10 +67,13 @@ void parse_args(int argc, char *argv[]) {
     // set program name
     prog = argv[0];
 
+    bool expressionflag = false;
+
     // parse options
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg[0] == '-') {
+            expressionflag = true;
             switch (arg[1]) {
                 case 'n':  // -name
                     if (++i < argc) {
@@ -115,11 +118,13 @@ void parse_args(int argc, char *argv[]) {
                     if (++i < argc) {
                         exec = true;
                         for (; i < argc && strcmp(argv[i], ";") != 0; ++i) {
-                            cerr << argv[i] << endl;
                             arg_exec.emplace_back(argv[i]);
                         }
                         if (i >= argc) {
                             arg_err("missing argument to", "-exec");
+                        }
+                        if (arg_exec.empty()) {
+                            arg_err("invalid argument `;' to", "-exec");
                         }
                     } else {
                         arg_err("missing argument to", "-exec");
@@ -136,6 +141,7 @@ void parse_args(int argc, char *argv[]) {
                     break;
             }
         } else {
+            if (expressionflag) arg_err("paths must precede expression:", arg);
             paths.emplace_back(arg);
         }
     }
@@ -202,7 +208,9 @@ int execute(const fs::path &path) {  // TODO: unimplemented
         size_t where = arg.find("{}");
         if (where != string::npos)
             arg.replace(where, arg.length(), path.string());
-        snprintf(args[i], arg.length(), "%s", arg.c_str());
+        // TODO: the following line is BAD!
+        args[i] = new char[arg.length() + 1];
+        snprintf(args[i], arg.length() + 1, "%s", arg.c_str());
     }
 
     return execvpe(args[0], args, environ);
