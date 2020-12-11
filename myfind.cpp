@@ -258,14 +258,11 @@ int main(int argc, char *argv[]) {
     parse_args(argc, argv);
     // then run find on every path in paths
     for (auto &p : paths) {
-        if (fs::exists(p)) {
+        if (!fs::exists(p)) run_err(p.string(), "No such file or directory");
             unsigned short i = 0;
             for (; links && i < 256 && fs::is_symlink(p); ++i) {
                 p = fs::read_symlink(p);
             }
             find(p);
-        } else {
-            run_err(p.string(), "No such file or directory");
-        }
     }
 }
