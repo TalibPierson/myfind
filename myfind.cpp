@@ -153,21 +153,22 @@ void parse_args(int argc, char *argv[]) {
 bool test_type(const filesystem::path &p) {
     // TODO: test this
     // TODO: bad when combined with -L
+    // TODO: cannot find symlinks
     switch (arg_type) {
         case 'b':  // block (buffered) special
-            return fs::is_block_file(p);
+            return fs::is_block_file(p) && !fs::is_symlink(p);
         case 'c':  // character (unbuffered) special
-            return fs::is_character_file(p);
+            return fs::is_character_file(p) && !fs::is_symlink(p);
         case 'd':  // directory TODO: FAILURE!
             return fs::is_directory(p) && !fs::is_symlink(p);
         case 'p':  // named pipe (FIFO)
-            return fs::is_fifo(p);
+            return fs::is_fifo(p) && !fs::is_symlink(p);
         case 'f':  // regular file
-            return fs::is_regular_file(p);
+            return fs::is_regular_file(p) && !fs::is_symlink(p);
         case 'l':  // symbolic link
             return fs::is_symlink(p);
         case 's':  // socket
-            return fs::is_socket(p);
+            return fs::is_socket(p) && !fs::is_symlink(p);
         default:
             perror("test_type");
             exit(EXIT_FAILURE);
