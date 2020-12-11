@@ -165,7 +165,7 @@ bool test_type(const filesystem::path &p) {  // TODO: test this
     }
 }
 
-bool test_mtime(const filesystem::path &p) {  // TODO: mtime wrong
+bool test_mtime(const filesystem::path &p) {
     /*
      * POSIX:
      * The primary shall evaluate as true
