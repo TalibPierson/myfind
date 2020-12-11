@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <wait.h>
 
 using namespace std;
 namespace fs = filesystem;
@@ -213,7 +214,18 @@ int execute(const fs::path &path) {  // TODO: unimplemented
         snprintf(args[i], arg.length() + 1, "%s", arg.c_str());
     }
 
-    return execvpe(args[0], args, environ);
+    pid_t pid = fork();
+    if (pid == -1) {  // failure to fork
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {  // parent
+        int ret;
+        waitpid(pid, &ret, 0);
+        return ret;
+    } else {  // child
+        execvpe(args[0], args, environ);
+        exit(EXIT_FAILURE);  // we shouldn't get here
+    }
 }
 
 void do_actions(const fs::path &path) {
