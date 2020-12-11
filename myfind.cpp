@@ -107,7 +107,7 @@ void parse_args(int argc, char *argv[]) {
                 case 'e':  // -exec
                     if (++i < argc) {
                         exec = true;
-                        for (; i < argc && argv[i][0] != ';'; ++i) {
+                        for (; i < argc && !strcmp(argv[i], ";"); ++i) {
                             arg_exec.emplace_back(argv[i]);
                         }
                     } else
