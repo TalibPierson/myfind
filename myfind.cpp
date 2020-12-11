@@ -112,11 +112,13 @@ void parse_args(int argc, char *argv[]) {
                 case 'e':  // -exec
                     if (++i < argc) {
                         exec = true;
-                        for (; i < argc && !strcmp(argv[i], ";"); ++i) {
+                        for (; i < argc && strcmp(argv[i], ";") != 0; ++i) {
+                            cerr << argv[i] << endl;
                             arg_exec.emplace_back(argv[i]);
                         }
-                        if (strcmp(argv[i], ";") != 0)
+                        if (i >= argc) {
                             arg_err("missing argument to", "-exec");
+                        }
                     } else {
                         arg_err("missing argument to", "-exec");
                     }
