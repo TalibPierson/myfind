@@ -101,10 +101,12 @@ void parse_args(int argc, char *argv[]) {
                         if (arg_type != 'b' && arg_type != 'c' &&
                             arg_type != 'd' && arg_type != 'p' &&
                             arg_type != 'f' && arg_type != 'l' &&
-                            arg_type != 's')
+                            arg_type != 's') {
                             cerr << prog
                                  << ": Unknown argument to -type: " << arg_type
                                  << '\n';
+                            exit(EXIT_FAILURE);
+                        }
                     } else {
                         arg_err("missing argument to", "-type");
                     }
