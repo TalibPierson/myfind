@@ -2,7 +2,7 @@
  * myfind.cpp
  * Talib Pierson
  * December 2020
- * A simplified version of the UNIX command find.
+ * A simplified version of the UNIX command find in C++20.
  */
 
 #include <boost/program_options.hpp>
@@ -16,7 +16,7 @@ namespace po = boost::program_options;
 
 /* ==[ INITIALIZE GLOBAL ARGUMENTS ]== */
 /// name of program
-std::string prog;
+string prog;
 /// paths to search
 vector<fs::path> paths;
 
@@ -81,7 +81,7 @@ void parse_args(int argc, char *argv[]) {
                         try {
                             mtime = true;
                             arg_mtime = stol(argv[i]);
-                        } catch (const std::invalid_argument &_) {
+                        } catch (const invalid_argument &_) {
                             arg_err(
                                     "invalid argument `" + string(argv[i]) + "' to",
                                     "-mtime");
@@ -109,6 +109,8 @@ void parse_args(int argc, char *argv[]) {
                         for (; i < argc && !strcmp(argv[i], ";"); ++i) {
                             arg_exec.emplace_back(argv[i]);
                         }
+                        if (strcmp(argv[i], ";") != 0)
+                            arg_err("missing argument to", "-exec");
                     } else
                         arg_err("missing argument to", "-exec");
                     break;
@@ -180,9 +182,19 @@ bool test(const filesystem::path &p) {
     return ret;
 }
 
-bool execute(const fs::path &path) {  // TODO: unimplemented
-    bool ret = true;
-    return ret;
+int execute(const fs::path &path) {  // TODO: unimplemented
+    // The string "{}" is replaced by the current file name being processed
+    size_t len = arg_exec.size();
+    char **args = new char *[len];
+    for (size_t i = 0; i < len; ++i) {
+        string arg = arg_exec[i];
+        size_t where = arg.find("{}");
+        if (where != string::npos)
+            arg.replace(where, arg.length(), path.string());
+        strcpy(args[i], arg.c_str());
+    }
+
+    return execvpe(args[0], args, environ);
 }
 
 void do_actions(const fs::path &path) {
