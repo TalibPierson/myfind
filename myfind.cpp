@@ -151,13 +151,13 @@ void parse_args(int argc, char *argv[]) {
 }
 
 bool test_type(const filesystem::path &p) {  // TODO: test this
-    switch (arg_type) {
+    switch (arg_type) {  // TODO: bad when combined with -L
         case 'b':  // block (buffered) special
             return fs::is_block_file(p);
         case 'c':  // character (unbuffered) special
             return fs::is_character_file(p);
         case 'd':  // directory TODO: FAILURE!
-            return fs::is_directory(p);
+            return fs::is_directory(p) && !fs::is_symlink(p);
         case 'p':  // named pipe (FIFO)
             return fs::is_fifo(p);
         case 'f':  // regular file
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
     // then run find on every path in paths
     for (auto &p : paths) {
         if (fs::exists(p)) {
-            if (links && fs::is_symlink(p)) p = fs::read_symlink(p);
+            while (links && fs::is_symlink(p)) p = fs::read_symlink(p);
             find(p);
         } else {
             run_err(p.string(), "No such file or directory");
