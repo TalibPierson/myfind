@@ -5,6 +5,7 @@
  * A simplified version of the UNIX command find in C++20.
  */
 #include <unistd.h>
+#include <wait.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -13,7 +14,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <wait.h>
 
 using namespace std;
 namespace fs = filesystem;
@@ -203,7 +203,7 @@ bool test(const filesystem::path &p) {
 int execute(const fs::path &path) {  // TODO: unimplemented
     // The string "{}" is replaced by the current file name being processed
     size_t len = arg_exec.size();
-    char **args = new char *[len];
+    char **args = new char *[len + 1];
     for (size_t i = 0; i < len; ++i) {
         string arg = arg_exec[i];
         size_t where = arg.find("{}");
@@ -213,6 +213,7 @@ int execute(const fs::path &path) {  // TODO: unimplemented
         args[i] = new char[arg.length() + 1];
         snprintf(args[i], arg.length() + 1, "%s", arg.c_str());
     }
+    args[len] = nullptr;
 
     pid_t pid = fork();
     if (pid == -1) {  // failure to fork
