@@ -137,7 +137,7 @@ bool test_type(const filesystem::path &p) {  // TODO: test this
             return fs::is_block_file(p);
         case 'c':  // character (unbuffered) special
             return fs::is_character_file(p);
-        case 'd':  // directory
+        case 'd':  // directory TODO: FAILURE!
             return fs::is_directory(p);
         case 'p':  // named pipe (FIFO)
             return fs::is_fifo(p);
@@ -169,7 +169,7 @@ bool test_mtime(const filesystem::path &p) {  // TODO: mtime wrong
     return (curr - modt) / 86400 == arg_mtime;
 }
 
-bool test_name(const filesystem::path &p) {  // TODO: untested, wildcard
+bool test_name(const filesystem::path &p) {  // TODO: wildcard
     return p.filename().string() == arg_name;
 }
 
@@ -181,7 +181,7 @@ bool test(const filesystem::path &p) {
     return ret;
 }
 
-bool execute(const fs::path &path) {
+bool execute(const fs::path &path) {  // TODO: unimplemented
     bool ret = true;
     return ret;
 }
