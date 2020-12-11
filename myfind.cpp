@@ -37,8 +37,7 @@ bool print = false;
 bool links = false;
 
 /// provide operator<< for ostream, vector
-template<typename T>
-ostream &operator<<(ostream &out, const vector<T> &vec) {
+ostream &operator<<(ostream &out, const vector<string> &vec) {
     out << '[';
     if (!vec.empty()) {
         for (auto &path : vec) out << path << ", ";
