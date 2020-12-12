@@ -26,27 +26,30 @@ using std::vector;
 namespace fs = std::filesystem;
 namespace c = std::chrono;
 
-/* ==[ INITIALIZE GLOBAL ARGUMENTS ]== */
-/// name of program
-char *prog;
-/// paths to search
-vector<fs::path> paths;
+/* ==[ INIT GLOBAL ARGS ]== */
+using global_t = struct myfind_data {
+public:
+    /// name of program
+    string prog;
+    /// paths to search
+    vector<fs::path> paths;
 
-// tests
-bool name = false;
-char *arg_name;
-bool mtime = false;
-ssize_t arg_mtime = 0;
-bool type = false;
-char arg_type = '\0';
+    // tests
+    bool name = false;
+    string arg_name;
+    bool mtime = false;
+    ssize_t arg_mtime = 0;
+    bool type = false;
+    char arg_type = '\0';
 
-// actions
-bool exec = false;
-vector<string> arg_exec;
-bool print = false;
+    // actions
+    bool exec = false;
+    vector<string> arg_exec;
+    bool print = false;
 
-// short argument
-bool links = false;
+    // short argument
+    bool links = false;
+};
 
 /// provide operator<< for ostream, vector
 ostream &operator<<(ostream &out, const vector<string> &vec) {
@@ -60,21 +63,21 @@ ostream &operator<<(ostream &out, const vector<string> &vec) {
 }
 
 /// report a failure
-void arg_err(const string &msg, const string &what) {
-    cerr << prog << ": " << msg << " `" << what << "'\n";
+void arg_err(const string &msg, const string &what, const global_t &data) {
+    cerr << data.prog << ": " << msg << " `" << what << "'\n";
     exit(EXIT_FAILURE);
 }
 
 /// report a failure
-void run_err(const string &what, const string &msg) {
-    cerr << prog << ": ‘" << what << "’: " << msg << "\n";
+void run_err(const string &what, const string &msg, const global_t &data) {
+    cerr << data.prog << ": ‘" << what << "’: " << msg << "\n";
     exit(EXIT_FAILURE);
 }
 
 /// parse arguments
-void parse_args(int argc, char *argv[]) {
+void parse_args(int argc, char *argv[], global_t data) {
     // set program name
-    prog = argv[0];
+    data.prog = argv[0];
 
     bool expressionflag = false;
     bool predicateflag = false;
@@ -87,89 +90,90 @@ void parse_args(int argc, char *argv[]) {
             switch (arg[1]) {
                 case 'n':  // -name
                     if (++i < argc) {
-                        name = true;
-                        arg_name = argv[i];
+                        data.name = true;
+                        data.arg_name = argv[i];
                     } else {
-                        arg_err("missing argument to", "-name");
+                        arg_err("missing argument to", "-name", data);
                     }
                     predicateflag = true;
                     break;
                 case 'm':  // -mtime
                     if (++i < argc) {
                         try {
-                            mtime = true;
-                            arg_mtime = stol(argv[i]);
+                            data.mtime = true;
+                            data.arg_mtime = stol(argv[i]);
                         } catch (const invalid_argument &_) {
                             arg_err(
                                     "invalid argument `" + string(argv[i]) + "' to",
-                                    "-mtime");
+                                    "-mtime", data);
                         }
                     } else {
-                        arg_err("missing argument to", "-mtime");
+                        arg_err("missing argument to", "-mtime", data);
                     }
                     predicateflag = true;
                     break;
                 case 't':  // -type
                     if (++i < argc) {
-                        type = true;
-                        arg_type = argv[i][0];
-                        if (arg_type != 'b' && arg_type != 'c' &&
-                            arg_type != 'd' && arg_type != 'p' &&
-                            arg_type != 'f' && arg_type != 'l' &&
-                            arg_type != 's') {
-                            cerr << prog
-                                 << ": Unknown argument to -type: " << arg_type
-                                 << '\n';
+                        data.type = true;
+                        data.arg_type = argv[i][0];
+                        if (data.arg_type != 'b' && data.arg_type != 'c' &&
+                            data.arg_type != 'd' && data.arg_type != 'p' &&
+                            data.arg_type != 'f' && data.arg_type != 'l' &&
+                            data.arg_type != 's') {
+                            cerr << data.prog << ": Unknown argument to -type: "
+                                 << data.arg_type << '\n';
                             exit(EXIT_FAILURE);
                         }
                     } else {
-                        arg_err("missing argument to", "-type");
+                        arg_err("missing argument to", "-type", data);
                     }
                     predicateflag = true;
                     break;
                 case 'e':  // -exec
                     if (++i < argc) {
-                        exec = true;
+                        data.exec = true;
                         for (; i < argc && strcmp(argv[i], ";") != 0; ++i) {
-                            arg_exec.emplace_back(argv[i]);
+                            data.arg_exec.emplace_back(argv[i]);
                         }
                         if (i >= argc) {
-                            arg_err("missing argument to", "-exec");
+                            arg_err("missing argument to", "-exec", data);
                         }
-                        if (arg_exec.empty()) {
-                            arg_err("invalid argument `;' to", "-exec");
+                        if (data.arg_exec.empty()) {
+                            arg_err("invalid argument `;' to", "-exec", data);
                         }
                     } else {
-                        arg_err("missing argument to", "-exec");
+                        arg_err("missing argument to", "-exec", data);
                     }
                     predicateflag = true;
                     break;
                 case 'p':  // -print
-                    print = true;
+                    data.print = true;
                     predicateflag = true;
                     break;
                 case 'L':  // -L
-                    if (predicateflag) arg_err("unknown predicate", arg);
-                    links = true;
+                    if (predicateflag) arg_err("unknown predicate", arg, data);
+                    data.links = true;
                     break;
                 default:  // -???
-                    arg_err("unknown predicate", arg);
+                    arg_err("unknown predicate", arg, data);
                     break;
             }
         } else {
-            if (expressionflag) arg_err("paths must precede expression:", arg);
-            paths.emplace_back(arg);
+            if (expressionflag)
+                arg_err("paths must precede expression:", arg, data);
+            data.paths.emplace_back(arg);
         }
     }
-    if (paths.empty()) paths = {"."};    // default path is .
-    if (!(print || exec)) print = true;  // default action is print
+    if (data.paths.empty()) data.paths = {"."};  // default path is .
+    if (!(data.print || data.exec))
+        data.print = true;  // default action is print
 }
 
-bool test_type(const fs::path &p) {
+bool test_type(const fs::path &p, const global_t &data) {
     // TODO: test this
     // TODO: bad when combined with -L
     // TODO: cannot find symlinks
-    switch (arg_type) {
+    switch (data.arg_type) {
         case 'b':  // block (buffered) special
             return fs::is_block_file(p) && !fs::is_symlink(p);
         case 'c':  // character (unbuffered) special
@@ -190,7 +194,7 @@ bool test_type(const fs::path &p) {
     }
 }
 
-bool test_mtime(const fs::path &p) {
+bool test_mtime(const fs::path &p, const global_t &data) {
     /*
      * POSIX:
      * The primary shall evaluate as true
@@ -203,17 +207,18 @@ bool test_mtime(const fs::path &p) {
     time_t modt = c::system_clock::to_time_t(
             c::file_clock::to_sys(fs::last_write_time(p)));
     time_t curr = c::system_clock::to_time_t(c::system_clock::now());
-    return (curr - modt) / 86400 == arg_mtime;
+    return (curr - modt) / 86400 == data.arg_mtime;
 }
 
-bool test_name(const fs::path &p) {  // TODO: wildcard, glob()
+bool test_name(const fs::path &p,
+               const global_t &data) {  // TODO: wildcard, glob()
     // check the easiest thing first
-    if (p.filename().string() == arg_name) return true;
+    if (p.filename().string() == data.arg_name) return true;
 
     /* Match NAME: p.filename().c_str()
      * against the filename pattern PATTERN: arg_name.c_str(),
      * returning zero if it matches, FNM_NOMATCH if not.  */
-    int match = fnmatch(arg_name, p.filename().c_str(), 0);
+    int match = fnmatch(data.arg_name.c_str(), p.filename().c_str(), 0);
     if (match == 0) return true;             // Zero if string matches pattern
     if (match == FNM_NOMATCH) return false;  // FNM_NOMATCH if there is no match
 
@@ -222,20 +227,20 @@ bool test_name(const fs::path &p) {  // TODO: wildcard, glob()
     exit(EXIT_FAILURE);
 }
 
-bool test(const fs::path &p) {
+bool test(const fs::path &p, const global_t &data) {
     bool ret = true;
-    if (name) ret = test_name(p);
-    if (mtime) ret = ret && test_mtime(p);
-    if (type) ret = ret && test_type(p);
+    if (data.name) ret = test_name(p, data);
+    if (data.mtime) ret = ret && test_mtime(p, data);
+    if (data.type) ret = ret && test_type(p, data);
     return ret;
 }
 
-int execute(const fs::path &path) {
+int execute(const fs::path &path, const global_t &data) {
     // The string "{}" is replaced by the current file name being processed
-    size_t len = arg_exec.size();
+    size_t len = data.arg_exec.size();
     char **args = new char *[len + 1];
     for (size_t i = 0; i < len; ++i) {
-        string arg = arg_exec[i];
+        string arg = data.arg_exec[i];
         size_t where = arg.find("{}");
         if (where != string::npos)
             arg.replace(where, arg.length(), path.string());
@@ -259,37 +264,39 @@ int execute(const fs::path &path) {
     }
 }
 
-void do_actions(const fs::path &path) {
-    if (exec) {  // print only what is executed and returns SUCCESS
-        if (execute(path) && print) cout << path.string() << '\n';
+void do_actions(const fs::path &path, const global_t &data) {
+    if (data.exec) {  // print only what is executed and returns SUCCESS
+        if (execute(path, data) && data.print) cout << path.string() << '\n';
     } else {  // plain print; default action
         cout << path.string() << '\n';
     }
 }
 
 /// TODO: cannot increment recursive directory iterator: Permission denied
-void find(const fs::path &path) {
-    if (test(path)) {
-        do_actions(path);
+void find(const fs::path &path, const global_t &data) {
+    if (test(path, data)) {
+        do_actions(path, global_t());
     }
     for (auto &item : fs::recursive_directory_iterator(
             path,  // iterate over path
             fs::directory_options(
-                    links))) {  // follow symbolic links iff links
-        if (test(item)) do_actions(item.path());
+                    data.links))) {  // follow symbolic links iff links
+        if (test(item, data)) do_actions(item.path(), data);
     }
 }
 
 int main(int argc, char *argv[]) {
+    global_t data;
     // first parse the arguments
-    parse_args(argc, argv);
+    parse_args(argc, argv, data);
     // then run find on every path in paths
-    for (auto &p : paths) {
-        if (!fs::exists(p)) run_err(p.string(), "No such file or directory");
+    for (auto &p : data.paths) {
+        if (!fs::exists(p))
+            run_err(p.string(), "No such file or directory", data);
         uint8_t i = 0;
-        for (; links && i < UINT8_MAX && fs::is_symlink(p); ++i) {
+        for (; data.links && i < UINT8_MAX && fs::is_symlink(p); ++i) {
             p = fs::read_symlink(p);
         }
-        find(p);
+        find(p, data);
     }
 }
