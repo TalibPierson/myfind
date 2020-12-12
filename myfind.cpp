@@ -18,7 +18,7 @@
 
 using std::cerr;
 using std::cout;
-using std::invalid_argument;
+using std::invalid_argument;  // for stol
 using std::ostream;
 using std::stol;
 using std::string;
