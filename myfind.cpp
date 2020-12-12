@@ -211,7 +211,7 @@ bool test_mtime(const fs::path &p, const global_t &data) {
 }
 
 bool test_name(const fs::path &p,
-               const global_t &data) {  // TODO: wildcard, glob()
+               const global_t &data) {
     // check the easiest thing first
     if (p.filename().string() == data.arg_name) return true;
 
