@@ -87,7 +87,6 @@ void arg_err(const string &msg, const string &what, const global_t &data) {
  */
 void run_err(const string &what, const string &msg, const global_t &data) {
     cerr << data.prog << ": ‘" << what << "’: " << msg << "\n";
-    exit(EXIT_FAILURE);
 }
 
 /**
@@ -100,14 +99,12 @@ void parse_args(int argc, char *argv[], global_t &data) {
     // set program name
     data.prog = argv[0];
 
-    bool expressionflag = false;
     bool predicateflag = false;
 
     // parse options
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
         if (arg[0] == '-') {
-            expressionflag = true;
             switch (arg[1]) {
                 case 'n':  // -name
                     if (++i < argc) {
@@ -180,7 +177,7 @@ void parse_args(int argc, char *argv[], global_t &data) {
                     break;
             }
         } else {
-            if (expressionflag)
+            if (predicateflag)
                 arg_err("paths must precede expression:", arg, data);
             data.paths.emplace_back(arg);
         }
@@ -269,11 +266,15 @@ bool test_name(const fs::path &p, const global_t &data) {
  * @return true iff all tests passed
  */
 bool test(const fs::path &p, const global_t &data) {
-    bool ret = true;
-    if (data.name) ret = test_name(p, data);
-    if (data.mtime) ret = ret && test_mtime(p, data);
-    if (data.type) ret = ret && test_type(p, data);
-    return ret;
+    if (fs::exists(p)) {
+        bool ret = true;
+        if (data.name) ret = test_name(p, data);
+        if (data.mtime) ret = ret && test_mtime(p, data);
+        if (data.type) ret = ret && test_type(p, data);
+        return ret;
+    } else {
+        run_err(p.string(), "No such file or directory", data);
+    }
 }
 
 /**
@@ -330,14 +331,15 @@ void do_actions(const fs::path &path, const global_t &data) {
  * @param data contains result of parsed arguments to find
  */
 void find(const fs::path &path, const global_t &data) {
+    // do tests, actions on path
     if (test(path, data)) {
         do_actions(path, global_t());
     }
-    // iterate over path
+
+    // iterate over path; follow symbolic links iff links
     for (auto item = fs::recursive_directory_iterator(
-            path,
-            fs::directory_options(
-                    data.links));  // follow symbolic links iff links
+            path, fs::directory_options(data.links) |
+                  fs::directory_options::skip_permission_denied);
          item != fs::recursive_directory_iterator();) {
         if (test(item->path(), data)) do_actions(item->path(), data);
         ++item;
@@ -356,13 +358,15 @@ int main(int argc, char *argv[]) {
     parse_args(argc, argv, data);
     // then run find on every path in paths
     for (auto &p : data.paths) {
-        if (!fs::exists(p))
+        if (fs::exists(p)) {
+            uint8_t i = 0;
+            for (; data.links && i < UINT8_MAX && fs::is_symlink(p); ++i) {
+                p = fs::read_symlink(p);
+            }
+            find(p, data);
+        } else {
             run_err(p.string(), "No such file or directory", data);
-        uint8_t i = 0;
-        for (; data.links && i < UINT8_MAX && fs::is_symlink(p); ++i) {
-            p = fs::read_symlink(p);
         }
-        find(p, data);
     }
 
     return EXIT_SUCCESS;
