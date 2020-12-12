@@ -57,7 +57,8 @@ public:
  * @param vec vector of strings to print to output stream
  * @return output stream for chaining
  */
-ostream &operator<<(ostream &out, const vector<string> &vec) {
+template<typename T>
+ostream &operator<<(ostream &out, const vector<T> &vec) {
     out << '[';
     if (!vec.empty()) {
         for (auto &path : vec) out << path << ", ";
@@ -95,7 +96,7 @@ void run_err(const string &what, const string &msg, const global_t &data) {
  * @param argv pointer to array of c_str arguments
  * @param data global data to set
  */
-void parse_args(int argc, char *argv[], global_t data) {
+void parse_args(int argc, char *argv[], global_t &data) {
     // set program name
     data.prog = argv[0];
 
@@ -332,11 +333,14 @@ void find(const fs::path &path, const global_t &data) {
     if (test(path, data)) {
         do_actions(path, global_t());
     }
-    for (auto &item : fs::recursive_directory_iterator(
-            path,  // iterate over path
+    // iterate over path
+    for (auto item = fs::recursive_directory_iterator(
+            path,
             fs::directory_options(
-                    data.links))) {  // follow symbolic links iff links
-        if (test(item, data)) do_actions(item.path(), data);
+                    data.links));  // follow symbolic links iff links
+         item != fs::recursive_directory_iterator();) {
+        if (test(item->path(), data)) do_actions(item->path(), data);
+        ++item;
     }
 }
 
