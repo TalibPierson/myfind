@@ -77,6 +77,7 @@ void parse_args(int argc, char *argv[]) {
     prog = argv[0];
 
     bool expressionflag = false;
+    bool predicateflag = false;
 
     // parse options
     for (int i = 1; i < argc; ++i) {
@@ -91,6 +92,7 @@ void parse_args(int argc, char *argv[]) {
                     } else {
                         arg_err("missing argument to", "-name");
                     }
+                    predicateflag = true;
                     break;
                 case 'm':  // -mtime
                     if (++i < argc) {
@@ -105,6 +107,7 @@ void parse_args(int argc, char *argv[]) {
                     } else {
                         arg_err("missing argument to", "-mtime");
                     }
+                    predicateflag = true;
                     break;
                 case 't':  // -type
                     if (++i < argc) {
@@ -122,6 +125,7 @@ void parse_args(int argc, char *argv[]) {
                     } else {
                         arg_err("missing argument to", "-type");
                     }
+                    predicateflag = true;
                     break;
                 case 'e':  // -exec
                     if (++i < argc) {
@@ -138,11 +142,14 @@ void parse_args(int argc, char *argv[]) {
                     } else {
                         arg_err("missing argument to", "-exec");
                     }
+                    predicateflag = true;
                     break;
                 case 'p':  // -print
                     print = true;
+                    predicateflag = true;
                     break;
                 case 'L':  // -L
+                    if (predicateflag) arg_err("unknown predicate", arg);;
                     links = true;
                     break;
                 default:  // -???
