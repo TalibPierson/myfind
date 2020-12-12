@@ -233,7 +233,7 @@ bool test_mtime(const fs::path &p, const global_t &data) {
      * File was last modified less than, more than or exactly n*24 hours ago. */
     // sorry for accessing __file_clock I had a better solution in C++20
     // but this is the best I can do with C++17 without risking bad time data
-    time_t diff = (fs::last_write_time(p) - fs::__file_clock::now()).count();
+    time_t diff = (fs::__file_clock::now() - fs::last_write_time(p)).count() / 1000000000;
     return diff / 86400 == data.arg_mtime;
 }
 
@@ -337,12 +337,10 @@ void find(const fs::path &path, const global_t &data) {
     }
 
     // iterate over path; follow symbolic links iff links
-    for (auto item = fs::recursive_directory_iterator(
+    for (auto &item : fs::recursive_directory_iterator(
             path, fs::directory_options(data.links) |
-                  fs::directory_options::skip_permission_denied);
-         item != fs::recursive_directory_iterator();) {
-        if (test(item->path(), data)) do_actions(item->path(), data);
-        ++item;
+                  fs::directory_options::skip_permission_denied)) {
+        if (test(item.path(), data)) do_actions(item.path(), data);
     }
 }
 
