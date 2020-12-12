@@ -24,7 +24,7 @@ using std::stol;
 using std::string;
 using std::vector;
 namespace fs = std::filesystem;
-namespace c = std::chrono;
+namespace c = std::chrono;  // for -mtime
 
 /* ==[ INIT GLOBAL ARGS ]== */
 using global_t = struct myfind_data {
