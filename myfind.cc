@@ -218,7 +218,7 @@ bool test_type(const fs::path &p, const global_t &data) {
     }
 }
 
-/**
+/**TODO: some sort of problem with symlinks.
  * For -mtime
  * @param p path to test time of
  * @param data contains result of parsed arguments to find
