@@ -1,5 +1,5 @@
 project(myfind)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(myfind myfind.cpp)
+add_executable(myfind myfind.cc)
