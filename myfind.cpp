@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
     for (auto &p : paths) {
         if (!fs::exists(p)) run_err(p.string(), "No such file or directory");
         uint8_t i = 0;
-        for (; links && i != UINT8_MAX && fs::is_symlink(p); ++i) {
+        for (; links && i < UINT8_MAX && fs::is_symlink(p); ++i) {
             p = fs::read_symlink(p);
         }
         find(p);
