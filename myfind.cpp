@@ -5,7 +5,7 @@
  * A simplified version of the find command.
  * Target: GNU/Linux
  * Language: C++20
- * Note: other configurations are unsupported.
+ * Note: other configurations may not work.
  */
 #include <fnmatch.h>  // for fnmatch() for -name
 #include <unistd.h>   // for fork(), environ for -exec
@@ -66,7 +66,7 @@ ostream &operator<<(ostream &out, const vector<T> &vec) {
 }
 
 /**
- * report a failure; used for argument errors
+ * Report a failure; used for argument errors
  * @param msg
  * @param what
  * @param data
@@ -77,7 +77,7 @@ void arg_err(const string &msg, const string &what, const global_t &data) {
 }
 
 /**
- * report a failure; used for runtime errors
+ * Report a failure; used for runtime errors
  * @param what
  * @param msg
  * @param data
@@ -87,7 +87,7 @@ void run_err(const string &what, const string &msg, const global_t &data) {
 }
 
 /**
- * parse arguments to command; helper to main() sets data
+ * Parse arguments to command; helper to main() sets data
  * @param argc argument count
  * @param argv pointer to array of c_str arguments
  * @param data global data to set
@@ -185,7 +185,7 @@ void parse_args(int argc, char *argv[], global_t &data) {
 }
 
 /**
- * for -type
+ * For -type
  * @param p path to test type of
  * @param data contains result of parsed arguments to find
  * @return true iff test passed
@@ -216,7 +216,7 @@ bool test_type(const fs::path &p, const global_t &data) {
 }
 
 /**
- * for -mtime
+ * For -mtime
  * @param p path to test time of
  * @param data contains result of parsed arguments to find
  * @return true iff test passed
@@ -235,7 +235,7 @@ bool test_mtime(const fs::path &p, const global_t &data) {
 }
 
 /**
- * for -name
+ * For -name
  * @param p path to test name of
  * @param data contains result of parsed arguments to find
  * @return true iff test passed
@@ -257,7 +257,7 @@ bool test_name(const fs::path &p, const global_t &data) {
 }
 
 /**
- * run all necessary tests
+ * Run all necessary tests
  * @param p path to test
  * @param data contains result of parsed arguments to find
  * @return true iff all tests passed
@@ -275,7 +275,7 @@ bool test(const fs::path &p, const global_t &data) {
 }
 
 /**
- * for -exec
+ * For -exec
  * @param path to program-file to execute
  * @param data contains result of parsed arguments to find
  * @return return of command executed
@@ -310,7 +310,7 @@ int execute(const fs::path &path, const global_t &data) {
 }
 
 /**
- * for actions: -print, -exec
+ * For actions: -print, -exec
  * @param path path to perform action(s) on
  * @param data contains result of parsed arguments to find
  */
@@ -344,7 +344,7 @@ void find(const fs::path &path, const global_t &data) {
 }
 
 /**
- * use helpers to parse arguments then iterate over directories.
+ * Use helpers to parse arguments then iterate over directories.
  * @param argc argument count
  * @param argv pointer to array of c_str arguments
  * @return
