@@ -2,7 +2,10 @@
  * myfind.cpp
  * Talib Pierson
  * December 2020
- * A simplified version of the UNIX command find in C++20.
+ * A simplified version of the find command.
+ * Target: GNU/Linux
+ * Language: C++20
+ * Note: other configurations are unsupported.
  */
 #include <fnmatch.h>  // for fnmatch() for -name
 #include <unistd.h>   // for fork(), environ for -exec
@@ -16,15 +19,9 @@
 #include <string>
 #include <vector>
 
-using std::cerr;
-using std::cout;
-using std::invalid_argument;
-using std::ostream;
-using std::stol;
-using std::string;
-using std::vector;
-namespace fs = std::filesystem;
-namespace c = std::chrono;
+using namespace std;
+namespace fs = filesystem;
+namespace c = chrono;
 
 /// global program data; includes result parse_args
 using global_t = struct myfind_data {
@@ -285,18 +282,18 @@ bool test(const fs::path &p, const global_t &data) {
  */
 int execute(const fs::path &path, const global_t &data) {
     // The string "{}" is replaced by the current file name being processed
-    size_t len = data.arg_exec.size();
-    char **args = new char *[len + 1];
-    for (size_t i = 0; i < len; ++i) {
+    size_t size = data.arg_exec.size();
+    char **args = new char *[size + 1];
+    for (size_t i = 0; i < size; ++i) {
         string arg = data.arg_exec[i];
-        size_t where = arg.find("{}");
-        if (where != string::npos)
-            arg.replace(where, arg.length(), path.string());
+        size_t location = arg.find("{}");
+        if (location != string::npos)
+            arg.replace(location, arg.length(), path.string());
         // TODO: the following line is BAD!
         args[i] = new char[arg.length() + 1];
         snprintf(args[i], arg.length() + 1, "%s", arg.c_str());
     }
-    args[len] = nullptr;
+    args[size] = nullptr;
 
     pid_t pid = fork();
     if (pid == -1) {  // failure to fork
