@@ -292,7 +292,7 @@ int execute(const fs::path &path, const global_t &data) {
         size_t location = arg.find("{}");
         if (location != string::npos)
             arg.replace(location, arg.length(), path.string());
-        // TODO: the following line is BAD!
+        // TODO: the following line might be BAD! IDK!!!
         args[i] = new char[arg.length() + 1];
         snprintf(args[i], arg.length() + 1, "%s", arg.c_str());
     }
