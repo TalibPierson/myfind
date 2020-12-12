@@ -210,8 +210,7 @@ bool test_mtime(const fs::path &p, const global_t &data) {
     return (curr - modt) / 86400 == data.arg_mtime;
 }
 
-bool test_name(const fs::path &p,
-               const global_t &data) {
+bool test_name(const fs::path &p, const global_t &data) {
     // check the easiest thing first
     if (p.filename().string() == data.arg_name) return true;
 
