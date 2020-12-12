@@ -203,12 +203,13 @@ bool test_name(const fs::path &p) {  // TODO: wildcard, glob()
     // check the easiest thing first
     if (p.filename().string() == arg_name) return true;
 
-    // now we try to glob.
-    const char *pattern = arg_name;
-    const char *string = p.filename().c_str();
-    int match = fnmatch(pattern, string, 0);
+    /* Match NAME: p.filename().c_str()
+     * against the filename pattern PATTERN: arg_name.c_str(),
+     * returning zero if it matches, FNM_NOMATCH if not.  */
+    int match = fnmatch(arg_name, p.filename().c_str(), 0);
     if (match == 0) return true;             // Zero if string matches pattern
     if (match == FNM_NOMATCH) return false;  // FNM_NOMATCH if there is no match
+
     // we should not get this far
     perror("fnmatch");
     exit(EXIT_FAILURE);
