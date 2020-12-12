@@ -97,6 +97,7 @@ void parse_args(int argc, char *argv[], global_t &data) {
     data.prog = argv[0];
 
     bool predicateflag = false;
+    bool pathflag = false;
 
     // parse options
     for (int i = 1; i < argc; ++i) {
@@ -166,7 +167,7 @@ void parse_args(int argc, char *argv[], global_t &data) {
                     predicateflag = true;
                     break;
                 case 'L':  // -L
-                    if (predicateflag) arg_err("unknown predicate", arg, data);
+                    if (predicateflag || pathflag) arg_err("unknown predicate", arg, data);
                     data.links = true;
                     break;
                 default:  // -???
@@ -177,6 +178,7 @@ void parse_args(int argc, char *argv[], global_t &data) {
             if (predicateflag)
                 arg_err("paths must precede expression:", arg, data);
             data.paths.emplace_back(arg);
+            pathflag = true;
         }
     }
     if (data.paths.empty()) data.paths = {"."};  // default path is .
