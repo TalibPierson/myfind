@@ -272,9 +272,9 @@ bool test(const fs::path &p, const global_t &data) {
         if (data.mtime) ret = ret && test_mtime(p, data);
         if (data.type) ret = ret && test_type(p, data);
         return ret;
-    } else {
-        run_err(p.string(), "No such file or directory", data);
     }
+    run_err(p.string(), "No such file or directory", data);
+    return false;
 }
 
 /**
