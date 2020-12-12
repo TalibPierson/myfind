@@ -167,7 +167,8 @@ void parse_args(int argc, char *argv[], global_t &data) {
                     predicateflag = true;
                     break;
                 case 'L':  // -L
-                    if (predicateflag || pathflag) arg_err("unknown predicate", arg, data);
+                    if (predicateflag || pathflag)
+                        arg_err("unknown predicate", arg, data);
                     data.links = true;
                     break;
                 default:  // -???
