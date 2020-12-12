@@ -4,9 +4,9 @@
  * December 2020
  * A simplified version of the UNIX command find in C++20.
  */
-#include <fnmatch.h>
-#include <unistd.h>
-#include <wait.h>
+#include <fnmatch.h>  // for fnmatch() for -name
+#include <unistd.h>   // for fork(), environ for -exec
+#include <wait.h>     // for waitpid() for -exec
 
 #include <chrono>
 #include <cstdlib>
@@ -18,21 +18,24 @@
 
 using std::cerr;
 using std::cout;
-using std::invalid_argument;  // for stol
+using std::invalid_argument;
 using std::ostream;
 using std::stol;
 using std::string;
 using std::vector;
 namespace fs = std::filesystem;
-namespace c = std::chrono;  // for -mtime
+namespace c = std::chrono;
 
-/* ==[ INIT GLOBAL ARGS ]== */
+/// global program data; includes result parse_args
 using global_t = struct myfind_data {
 public:
     /// name of program
     string prog;
     /// paths to search
     vector<fs::path> paths;
+
+    // short argument
+    bool links = false;
 
     // tests
     bool name = false;
@@ -46,9 +49,6 @@ public:
     bool exec = false;
     vector<string> arg_exec;
     bool print = false;
-
-    // short argument
-    bool links = false;
 };
 
 /// provide operator<< for ostream, vector
@@ -74,7 +74,7 @@ void run_err(const string &what, const string &msg, const global_t &data) {
     exit(EXIT_FAILURE);
 }
 
-/// parse arguments
+/// parse arguments to command; helper to main()
 void parse_args(int argc, char *argv[], global_t data) {
     // set program name
     data.prog = argv[0];
@@ -169,6 +169,7 @@ void parse_args(int argc, char *argv[], global_t data) {
         data.print = true;  // default action is print
 }
 
+/// for -type
 bool test_type(const fs::path &p, const global_t &data) {
     // TODO: test this
     // TODO: bad when combined with -L
@@ -194,6 +195,7 @@ bool test_type(const fs::path &p, const global_t &data) {
     }
 }
 
+/// for -mtime
 bool test_mtime(const fs::path &p, const global_t &data) {
     /*
      * POSIX:
@@ -210,6 +212,7 @@ bool test_mtime(const fs::path &p, const global_t &data) {
     return (curr - modt) / 86400 == data.arg_mtime;
 }
 
+/// for -name
 bool test_name(const fs::path &p, const global_t &data) {
     // check the easiest thing first
     if (p.filename().string() == data.arg_name) return true;
@@ -226,6 +229,7 @@ bool test_name(const fs::path &p, const global_t &data) {
     exit(EXIT_FAILURE);
 }
 
+/// run all necessary tests
 bool test(const fs::path &p, const global_t &data) {
     bool ret = true;
     if (data.name) ret = test_name(p, data);
@@ -234,6 +238,7 @@ bool test(const fs::path &p, const global_t &data) {
     return ret;
 }
 
+/// for -exec
 int execute(const fs::path &path, const global_t &data) {
     // The string "{}" is replaced by the current file name being processed
     size_t len = data.arg_exec.size();
@@ -263,6 +268,7 @@ int execute(const fs::path &path, const global_t &data) {
     }
 }
 
+/// for -print, -exec
 void do_actions(const fs::path &path, const global_t &data) {
     if (data.exec) {  // print only what is executed and returns SUCCESS
         if (execute(path, data) && data.print) cout << path.string() << '\n';
@@ -272,6 +278,7 @@ void do_actions(const fs::path &path, const global_t &data) {
 }
 
 /// TODO: cannot increment recursive directory iterator: Permission denied
+/// helper function to main(); recursively iterate over directories
 void find(const fs::path &path, const global_t &data) {
     if (test(path, data)) {
         do_actions(path, global_t());
@@ -284,6 +291,7 @@ void find(const fs::path &path, const global_t &data) {
     }
 }
 
+/// use helpers to parse arguments then iterate over directories.
 int main(int argc, char *argv[]) {
     global_t data;
     // first parse the arguments
@@ -298,4 +306,6 @@ int main(int argc, char *argv[]) {
         }
         find(p, data);
     }
+
+    return EXIT_SUCCESS;
 }
