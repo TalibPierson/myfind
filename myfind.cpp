@@ -51,7 +51,12 @@ public:
     bool print = false;
 };
 
-/// provide operator<< for ostream, vector
+/**
+ * Provide operator<< for ostream, vector
+ * @param out output stream
+ * @param vec vector of strings to print to output stream
+ * @return output stream for chaining
+ */
 ostream &operator<<(ostream &out, const vector<string> &vec) {
     out << '[';
     if (!vec.empty()) {
@@ -62,19 +67,34 @@ ostream &operator<<(ostream &out, const vector<string> &vec) {
     return out;
 }
 
-/// report a failure
+/**
+ * report a failure; used for argument errors
+ * @param msg
+ * @param what
+ * @param data
+ */
 void arg_err(const string &msg, const string &what, const global_t &data) {
     cerr << data.prog << ": " << msg << " `" << what << "'\n";
     exit(EXIT_FAILURE);
 }
 
-/// report a failure
+/**
+ * report a failure; used for runtime errors
+ * @param what
+ * @param msg
+ * @param data
+ */
 void run_err(const string &what, const string &msg, const global_t &data) {
     cerr << data.prog << ": ‘" << what << "’: " << msg << "\n";
     exit(EXIT_FAILURE);
 }
 
-/// parse arguments to command; helper to main()
+/**
+ * parse arguments to command; helper to main() sets data
+ * @param argc argument count
+ * @param argv pointer to array of c_str arguments
+ * @param data global data to set
+ */
 void parse_args(int argc, char *argv[], global_t data) {
     // set program name
     data.prog = argv[0];
@@ -169,7 +189,12 @@ void parse_args(int argc, char *argv[], global_t data) {
         data.print = true;  // default action is print
 }
 
-/// for -type
+/**
+ * for -type
+ * @param p path to test type of
+ * @param data contains result of parsed arguments to find
+ * @return true iff test passed
+ */
 bool test_type(const fs::path &p, const global_t &data) {
     // TODO: test this
     // TODO: bad when combined with -L
@@ -189,30 +214,37 @@ bool test_type(const fs::path &p, const global_t &data) {
             return fs::is_symlink(p);
         case 's':  // socket
             return fs::is_socket(p) && !fs::is_symlink(p);
-        default:
+        default:  // we shouldn't get this far if parse_args is correct
             perror("test_type");
             exit(EXIT_FAILURE);
     }
 }
 
-/// for -mtime
+/**
+ * for -mtime
+ * @param p path to test time of
+ * @param data contains result of parsed arguments to find
+ * @return true iff test passed
+ */
 bool test_mtime(const fs::path &p, const global_t &data) {
-    /*
-     * POSIX:
+    /* POSIX programmer's manual:
      * The primary shall evaluate as true
      * if the file modification time subtracted from the initialization time,
      * divided by 86400 (with any remainder discarded), is n.
-     * LINUX:
-     * File was last modified less than, more than or exactly n*24 hours ago.
-     */
-
+     * LINUX programmer's manual:
+     * File was last modified less than, more than or exactly n*24 hours ago. */
     time_t modt = c::system_clock::to_time_t(
             c::file_clock::to_sys(fs::last_write_time(p)));
     time_t curr = c::system_clock::to_time_t(c::system_clock::now());
     return (curr - modt) / 86400 == data.arg_mtime;
 }
 
-/// for -name
+/**
+ * for -name
+ * @param p path to test name of
+ * @param data contains result of parsed arguments to find
+ * @return true iff test passed
+ */
 bool test_name(const fs::path &p, const global_t &data) {
     // check the easiest thing first
     if (p.filename().string() == data.arg_name) return true;
@@ -229,7 +261,12 @@ bool test_name(const fs::path &p, const global_t &data) {
     exit(EXIT_FAILURE);
 }
 
-/// run all necessary tests
+/**
+ * run all necessary tests
+ * @param p path to test
+ * @param data contains result of parsed arguments to find
+ * @return true iff all tests passed
+ */
 bool test(const fs::path &p, const global_t &data) {
     bool ret = true;
     if (data.name) ret = test_name(p, data);
@@ -238,7 +275,12 @@ bool test(const fs::path &p, const global_t &data) {
     return ret;
 }
 
-/// for -exec
+/**
+ * for -exec
+ * @param path to program-file to execute
+ * @param data contains result of parsed arguments to find
+ * @return return of command executed
+ */
 int execute(const fs::path &path, const global_t &data) {
     // The string "{}" is replaced by the current file name being processed
     size_t len = data.arg_exec.size();
@@ -268,7 +310,11 @@ int execute(const fs::path &path, const global_t &data) {
     }
 }
 
-/// for -print, -exec
+/**
+ * for actions: -print, -exec
+ * @param path path to perform action(s) on
+ * @param data contains result of parsed arguments to find
+ */
 void do_actions(const fs::path &path, const global_t &data) {
     if (data.exec) {  // print only what is executed and returns SUCCESS
         if (execute(path, data) && data.print) cout << path.string() << '\n';
@@ -277,8 +323,11 @@ void do_actions(const fs::path &path, const global_t &data) {
     }
 }
 
-/// TODO: cannot increment recursive directory iterator: Permission denied
-/// helper function to main(); recursively iterate over directories
+/**TODO: cannot increment recursive directory iterator: Permission denied
+ * helper function to main(); recursively iterate over directories
+ * @param path path to iterate over subdirectories of
+ * @param data contains result of parsed arguments to find
+ */
 void find(const fs::path &path, const global_t &data) {
     if (test(path, data)) {
         do_actions(path, global_t());
@@ -291,7 +340,12 @@ void find(const fs::path &path, const global_t &data) {
     }
 }
 
-/// use helpers to parse arguments then iterate over directories.
+/**
+ * use helpers to parse arguments then iterate over directories.
+ * @param argc argument count
+ * @param argv pointer to array of c_str arguments
+ * @return
+ */
 int main(int argc, char *argv[]) {
     global_t data;
     // first parse the arguments
