@@ -4,6 +4,7 @@
  * December 2020
  * A simplified version of the UNIX command find in C++20.
  */
+#include <fnmatch.h>
 #include <unistd.h>
 #include <wait.h>
 
@@ -15,18 +16,25 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-namespace fs = filesystem;
+using std::cerr;
+using std::cout;
+using std::invalid_argument;
+using std::ostream;
+using std::stol;
+using std::string;
+using std::vector;
+namespace fs = std::filesystem;
+namespace c = std::chrono;
 
 /* ==[ INITIALIZE GLOBAL ARGUMENTS ]== */
 /// name of program
-string prog;
+char *prog;
 /// paths to search
 vector<fs::path> paths;
 
 // tests
 bool name = false;
-string arg_name;
+char *arg_name;
 bool mtime = false;
 ssize_t arg_mtime = 0;
 bool type = false;
@@ -150,7 +158,7 @@ void parse_args(int argc, char *argv[]) {
     if (!(print || exec)) print = true;  // default action is print
 }
 
-bool test_type(const filesystem::path &p) {
+bool test_type(const fs::path &p) {
     // TODO: test this
     // TODO: bad when combined with -L
     // TODO: cannot find symlinks
@@ -175,7 +183,7 @@ bool test_type(const filesystem::path &p) {
     }
 }
 
-bool test_mtime(const filesystem::path &p) {
+bool test_mtime(const fs::path &p) {
     /*
      * POSIX:
      * The primary shall evaluate as true
@@ -185,17 +193,28 @@ bool test_mtime(const filesystem::path &p) {
      * File was last modified less than, more than or exactly n*24 hours ago.
      */
 
-    time_t modt = chrono::system_clock::to_time_t(
-            chrono::file_clock::to_sys(fs::last_write_time(p)));
-    time_t curr = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    time_t modt = c::system_clock::to_time_t(
+            c::file_clock::to_sys(fs::last_write_time(p)));
+    time_t curr = c::system_clock::to_time_t(c::system_clock::now());
     return (curr - modt) / 86400 == arg_mtime;
 }
 
-bool test_name(const filesystem::path &p) {  // TODO: wildcard, glob()
-    return p.filename().string() == arg_name;
+bool test_name(const fs::path &p) {  // TODO: wildcard, glob()
+    // check the easiest thing first
+    if (p.filename().string() == arg_name) return true;
+
+    // now we try to glob.
+    const char *pattern = arg_name;
+    const char *string = p.filename().c_str();
+    int match = fnmatch(pattern, string, 0);
+    if (match == 0) return true;             // Zero if string matches pattern
+    if (match == FNM_NOMATCH) return false;  // FNM_NOMATCH if there is no match
+    // we should not get this far
+    perror("fnmatch");
+    exit(EXIT_FAILURE);
 }
 
-bool test(const filesystem::path &p) {
+bool test(const fs::path &p) {
     bool ret = true;
     if (name) ret = test_name(p);
     if (mtime) ret = ret && test_mtime(p);
@@ -259,8 +278,8 @@ int main(int argc, char *argv[]) {
     // then run find on every path in paths
     for (auto &p : paths) {
         if (!fs::exists(p)) run_err(p.string(), "No such file or directory");
-        unsigned short i = 0;
-        for (; links && i < 256 && fs::is_symlink(p); ++i) {
+        uint8_t i = 0;
+        for (; links && i != UINT8_MAX && fs::is_symlink(p); ++i) {
             p = fs::read_symlink(p);
         }
         find(p);
